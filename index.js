@@ -23,7 +23,7 @@ app.get('/nearby', async (req, res) => {
 });
 
 app.get('/schools', async (req, res) => {
-  const { lat, lon } = req.query;
+  const { lat, lon, city } = req.query;
   if (!lat || !lon) {
     return res.status(400).json({ error: 'Missing lat or lon' });
   }
@@ -37,10 +37,17 @@ app.get('/schools', async (req, res) => {
     
     const results = [];
     for (const t of types) {
-      const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lon}&radius=16000&keyword=${encodeURIComponent(t.keyword)}&key=${GOOGLE_API_KEY}`;
+      const searchKeyword = city ? `${city} ${t.keyword}` : t.keyword;
+      const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lon}&radius=24000&keyword=${encodeURIComponent(searchKeyword)}&key=${GOOGLE_API_KEY}`;
       const response = await fetch(url);
       const data = await response.json();
-      const school = data.results?.[0];
+      let school = data.results?.[0];
+      
+      if (city && school && !school.name.toLowerCase().includes(city.toLowerCase())) {
+        const citySchool = data.results?.find(s => s.name.toLowerCase().includes(city.toLowerCase()));
+        if (citySchool) school = citySchool;
+      }
+      
       results.push({
         type: t.label,
         name: school?.name || 'Not found',
@@ -59,3 +66,4 @@ app.get('/', (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+`));
