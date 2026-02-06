@@ -23,7 +23,7 @@ app.get('/nearby', async (req, res) => {
 });
 
 app.get('/schools', async (req, res) => {
-  const { lat, lon, city } = req.query;
+  const { lat, lon } = req.query;
   if (!lat || !lon) {
     return res.status(400).json({ error: 'Missing lat or lon' });
   }
@@ -34,8 +34,7 @@ app.get('/schools', async (req, res) => {
   
   for (let i = 0; i < types.length; i++) {
     try {
-      const keyword = city ? city + ' ' + types[i] : types[i];
-      const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lon}&radius=24000&keyword=${encodeURIComponent(keyword)}&key=${GOOGLE_API_KEY}`;
+      const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lon}&rankby=distance&keyword=${encodeURIComponent(types[i])}&key=${GOOGLE_API_KEY}`;
       const response = await fetch(url);
       const data = await response.json();
       const school = data.results && data.results[0];
